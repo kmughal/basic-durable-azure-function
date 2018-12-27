@@ -9,6 +9,30 @@
    
     public static class Activities
     {
+        [FunctionName("A_SendEmailForDocumentApproval")]
+        public static async Task<string> SendFakeEmailForDocumentApproval([ActivityTrigger] string fakeDocumentName,TraceWriter log)
+        {
+            // simulate email
+            await Task.Delay(1000);
+            return "Email sent for document approval";
+        }
+
+        [FunctionName("A_Publish_Document_To_System")]
+        public static async Task<string> SimulateDocumentApproved([ActivityTrigger] string fakeDocumentName, TraceWriter log)
+        {
+            // simulate email
+            await Task.Delay(1000);
+            return "File published to the site";
+        }
+
+        [FunctionName("A_Delete_Document_As_Rejected")]
+        public static async Task<string> SimulateDocumentRejected([ActivityTrigger] string fakeDocumentName, TraceWriter log)
+        {
+            // simulate email
+            await Task.Delay(1000);
+            return "File removed from the cache!";
+        }
+
         [FunctionName("A_Step_1")]
         public static async Task<List<object>> Step1(
             [ActivityTrigger] string process,

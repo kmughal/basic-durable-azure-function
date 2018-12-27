@@ -34,9 +34,10 @@
             TraceWriter log
             )
         {
+            var documentApproved = "unknown";
             try
             {
-               
+
                 var outputFromSubOrchestractor = await ctx.CallSubOrchestratorAsync<List<FakeEnrichObject>>("O_SubOrchestrator_Sample", new { FakeInput = "FakeString" });
 
                 if (!ctx.IsReplaying) log.Info("starting activity 1");
@@ -46,15 +47,32 @@
                 // there are many ways to handle error.
                 var outputOfStep1 = await ctx
                     .CallActivityWithRetryAsync<List<object>>("A_Step_1",
-                    new RetryOptions(TimeSpan.FromSeconds(5), 4) {
-                         Handle = ex => ex is InvalidOperationException,
-                         RetryTimeout = TimeSpan.FromSeconds(10) // Timeout afterr 10 seconds if no success.
-                         
+                    new RetryOptions(TimeSpan.FromSeconds(5), 4)
+                    {
+                        Handle = ex => ex is InvalidOperationException,
+                        RetryTimeout = TimeSpan.FromSeconds(10) // Timeout afterr 10 seconds if no success.
+
                     },
                     inputForStep1);
 
                 if (!ctx.IsReplaying) log.Info("starting activity 2");
                 var outputOfStep2 = await ctx.CallActivityAsync<List<object>>("A_Step_2", outputOfStep1);
+
+                // An example how to simulate an activity that requires human interaction.
+                const string fakeDocumentName = "fake-name-of-document";
+                var outputFromSendEmailForDocumentApproval = await ctx.CallActivityAsync<string>("A_SendEmailForDocumentApproval", fakeDocumentName);
+
+                documentApproved = await ctx.WaitForExternalEvent<string>("DocumentApproved");
+
+                if (documentApproved == "Approved")
+                {
+                    await ctx.CallActivityAsync<string>("A_Publish_Document_To_System", fakeDocumentName);
+                }
+                else
+                {
+                    await ctx.CallActivityAsync<bool>("A_Delete_Document_As_Rejected", fakeDocumentName);
+                }
+
 
                 return new
                 {
@@ -68,7 +86,8 @@
                 return new
                 {
                     Status = "Error",
-                    error.Message
+                    error.Message,
+                    documentApproved
                 };
             }
         }
