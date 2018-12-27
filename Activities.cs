@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
 
 
+   
     public static class Activities
     {
         [FunctionName("A_Step_1")]
@@ -32,5 +33,23 @@
             return outputFromStep1;
         }
 
+
+        [FunctionName("A_Step_Fake_EnrichObject")]
+        public static async Task<FakeEnrichObject> EnrichObject(
+            [ActivityTrigger] FakeEnrichObject fakeEnrichObjects,
+            TraceWriter log
+            )
+        {
+            // simulate the task.
+            log.Info("start enriching object");
+            await Task.Delay(3000);
+
+            return fakeEnrichObjects;
+        }
+
+        public class FakeEnrichObject
+        {
+
+        }
     }
 }
